@@ -1,0 +1,62 @@
+{
+  "name": "leitorbookaudio",
+  "productName": "LeitorBook Áudio",
+  "version": "1.0.0",
+  "description": "Biblioteca e leitor de livros PDF com narração, destaque da frase falada e tradução simultânea.",
+  "main": "src/main/main.js",
+  "author": "LeitorBook Áudio",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "sample": "node scripts/make-sample-pdf.js",
+    "test": "node scripts/make-sample-pdf.js && node scripts/e2e-features.js samples/a-biblioteca.pdf test-output && node scripts/e2e.js samples/the-lighthouse-keeper.pdf test-output",
+    "test:layout": "node scripts/e2e-layout.js samples/the-lighthouse-keeper.pdf samples/a-biblioteca.pdf test-output",
+    "icon": "electron scripts/make-icon.js",
+    "dist": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "dependencies": {
+    "msedge-tts": "^2.1.1",
+    "pdfjs-dist": "^6.5.438"
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "pdf-lib": "^1.17.1",
+    "playwright-core": "^1.65.0"
+  },
+  "build": {
+    "appId": "br.leitorbook.audio",
+    "productName": "LeitorBook Áudio",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "LeitorBook Áudio"
+    },
+    "fileAssociations": [
+      {
+        "ext": "pdf",
+        "name": "Livro PDF",
+        "role": "Viewer"
+      }
+    ]
+  }
+}

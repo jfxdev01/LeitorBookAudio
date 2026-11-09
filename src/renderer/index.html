@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' app: data: blob:; font-src 'self' data: blob:; media-src 'self' blob: data:; worker-src 'self' blob:; connect-src 'self' app: data: blob:">
+  <title>LeitorBook Áudio</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- ===================== BIBLIOTECA ===================== -->
+    <section id="view-library" class="view">
+      <header class="lib-header">
+        <div class="brand">
+          <span class="brand-mark" data-icon="headphones-book"></span>
+          <div>
+            <div class="brand-name">LeitorBook <span>Áudio</span></div>
+            <div class="brand-sub">Sua biblioteca para ler e ouvir</div>
+          </div>
+        </div>
+        <div class="lib-search">
+          <span data-icon="search"></span>
+          <input id="lib-search" type="search" placeholder="Buscar por título ou autor" autocomplete="off">
+        </div>
+        <div class="lib-actions">
+          <button id="btn-add-books" class="btn btn-primary"><span data-icon="plus"></span>Adicionar livros</button>
+          <button id="btn-settings" class="icon-btn" title="Configurações"><span data-icon="settings"></span></button>
+        </div>
+      </header>
+
+      <div class="lib-scroll">
+       <div class="lib-inner">
+        <div id="lib-continue" class="continue-card" hidden></div>
+
+        <div class="lib-toolbar">
+          <div class="segmented" id="lib-filter">
+            <button data-filter="all" class="active">Todos</button>
+            <button data-filter="reading">Lendo</button>
+            <button data-filter="unread">Não iniciados</button>
+            <button data-filter="finished">Concluídos</button>
+            <button data-filter="favorite">Favoritos</button>
+          </div>
+          <div class="lib-toolbar-right">
+            <span id="lib-count" class="muted"></span>
+            <label class="select-label">Ordenar
+              <select id="lib-sort">
+                <option value="recent">Lidos recentemente</option>
+                <option value="added">Adicionados recentemente</option>
+                <option value="title">Título (A–Z)</option>
+                <option value="author">Autor (A–Z)</option>
+                <option value="progress">Progresso</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div id="lib-grid" class="book-grid"></div>
+
+        <div id="lib-empty" class="empty-state" hidden>
+          <div class="empty-illustration" data-icon="books-big"></div>
+          <h2>Sua estante está vazia</h2>
+          <p>Adicione livros em PDF para ler, ouvir com narração e até escutar traduzido para outro idioma.</p>
+          <button id="btn-add-empty" class="btn btn-primary btn-lg"><span data-icon="plus"></span>Adicionar meu primeiro livro</button>
+          <p class="muted small">Dica: você também pode arrastar arquivos PDF para esta janela.</p>
+        </div>
+        <div id="lib-noresults" class="empty-state small-empty" hidden>
+          <h3>Nenhum livro encontrado</h3>
+          <p class="muted">Tente outro termo de busca ou filtro.</p>
+        </div>
+       </div>
+      </div>
+    </section>
+
+    <!-- ===================== LEITOR ===================== -->
+    <section id="view-reader" class="view" hidden>
+      <header class="reader-top">
+        <div class="rt-group">
+          <button id="btn-back" class="icon-btn" title="Voltar à biblioteca"><span data-icon="arrow-left"></span></button>
+          <button id="btn-sidebar" class="icon-btn" title="Sumário, marcadores e busca"><span data-icon="sidebar"></span></button>
+          <div class="reader-title">
+            <div id="reader-book-title" class="rt-title"></div>
+            <div id="reader-book-sub" class="rt-sub"></div>
+          </div>
+        </div>
+        <div class="rt-group rt-center">
+          <button id="btn-page-prev" class="icon-btn" title="Página anterior (Page Up)"><span data-icon="chevron-up"></span></button>
+          <div class="page-box">
+            <input id="page-input" type="text" inputmode="numeric" aria-label="Página atual">
+            <span class="muted">de <span id="page-total">0</span></span>
+          </div>
+          <button id="btn-page-next" class="icon-btn" title="Próxima página (Page Down)"><span data-icon="chevron-down"></span></button>
+          <span class="rt-sep"></span>
+          <button id="btn-zoom-out" class="icon-btn" title="Diminuir zoom (Ctrl -)"><span data-icon="minus"></span></button>
+          <button id="btn-zoom-mode" class="zoom-label" title="Alternar ajuste à largura / página inteira">100%</button>
+          <button id="btn-zoom-in" class="icon-btn" title="Aumentar zoom (Ctrl +)"><span data-icon="plus"></span></button>
+        </div>
+        <div class="rt-group rt-right">
+          <button id="btn-search" class="icon-btn" title="Buscar no livro (Ctrl F)"><span data-icon="search"></span></button>
+          <button id="btn-bookmark" class="icon-btn" title="Marcar esta página (Ctrl B)"><span data-icon="bookmark"></span></button>
+          <button id="btn-pdf-theme" class="icon-btn" title="Cor da página: normal, sépia ou noturna"><span data-icon="palette"></span></button>
+          <button id="btn-export" class="icon-btn" title="Gerar audiolivro em MP3"><span data-icon="download"></span></button>
+          <button id="btn-fullscreen" class="icon-btn" title="Tela cheia (F11)"><span data-icon="maximize"></span></button>
+          <button id="btn-help" class="icon-btn" title="Atalhos de teclado (?)"><span data-icon="keyboard"></span></button>
+        </div>
+      </header>
+
+      <div class="reader-body">
+        <aside id="sidebar" class="sidebar" hidden>
+          <div class="side-tabs segmented">
+            <button data-tab="outline" class="active">Sumário</button>
+            <button data-tab="bookmarks">Marcadores</button>
+            <button data-tab="search">Busca</button>
+          </div>
+          <div class="side-panel" data-panel="outline">
+            <div id="outline-list" class="outline"></div>
+          </div>
+          <div class="side-panel" data-panel="bookmarks" hidden>
+            <button id="btn-add-bookmark" class="btn btn-soft btn-block"><span data-icon="bookmark-plus"></span>Marcar página atual</button>
+            <div id="bookmark-list" class="bookmark-list"></div>
+          </div>
+          <div class="side-panel" data-panel="search" hidden>
+            <div class="search-box">
+              <span data-icon="search"></span>
+              <input id="search-input" type="search" placeholder="Buscar no livro…" autocomplete="off">
+            </div>
+            <div id="search-status" class="muted small"></div>
+            <div id="search-results" class="search-results"></div>
+          </div>
+        </aside>
+
+        <main id="viewer-container" class="viewer-container" tabindex="-1">
+          <div id="viewer" class="viewer"></div>
+          <div id="reader-loading" class="reader-loading" hidden><div class="spinner"></div><span>Abrindo livro…</span></div>
+        </main>
+
+        <div id="subtitle" class="subtitle" hidden>
+          <div class="sub-orig" id="sub-orig"></div>
+          <div class="sub-main" id="sub-main"></div>
+        </div>
+      </div>
+
+      <footer class="player">
+        <div class="player-controls">
+          <button id="btn-prev-sentence" class="icon-btn" title="Frase anterior (Ctrl ←)"><span data-icon="skip-back"></span></button>
+          <button id="btn-play" class="play-btn" title="Ouvir / pausar (Espaço)">
+            <span class="play-icon" data-icon="play"></span>
+            <span class="play-label">Ouvir</span>
+          </button>
+          <button id="btn-next-sentence" class="icon-btn" title="Próxima frase (Ctrl →)"><span data-icon="skip-forward"></span></button>
+          <button id="btn-stop" class="icon-btn" title="Parar"><span data-icon="stop"></span></button>
+        </div>
+        <div class="player-info">
+          <div id="player-status" class="player-status">Clique em <b>Ouvir</b> para começar a narração desta página</div>
+          <div class="player-chips">
+            <button id="chip-voice" class="chip" title="Alterar voz e idioma"></button>
+            <span id="chip-translation" class="chip chip-accent" hidden></span>
+            <button id="chip-timer" class="chip chip-warn" hidden title="Cancelar timer"></button>
+          </div>
+        </div>
+        <div class="player-options">
+          <label class="speed" title="Velocidade da narração">
+            <span data-icon="gauge"></span>
+            <select id="speed-select"></select>
+          </label>
+          <button id="btn-follow" class="icon-btn toggle" title="Acompanhar a leitura (rolar automaticamente)"><span data-icon="crosshair"></span></button>
+          <button id="btn-subtitle" class="icon-btn toggle" title="Legenda com a frase atual"><span data-icon="captions"></span></button>
+          <button id="btn-timer" class="icon-btn" title="Timer de sono"><span data-icon="moon"></span></button>
+          <button id="btn-voice-settings" class="btn btn-soft"><span data-icon="languages"></span><span class="btn-text">Voz e idioma</span></button>
+        </div>
+      </footer>
+
+      <!-- Painel de voz e idioma -->
+      <div id="voice-panel" class="popover voice-panel" hidden>
+        <div class="popover-head">
+          <h3>Voz e idioma</h3>
+          <button class="icon-btn" data-close-popover title="Fechar"><span data-icon="x"></span></button>
+        </div>
+        <div class="field">
+          <span class="field-label">Tipo de voz</span>
+          <div class="segmented segmented-full" id="engine-select">
+            <button data-engine="edge">Neurais online <small>alta qualidade</small></button>
+            <button data-engine="system">Do Windows <small>offline</small></button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">Idioma do texto (PDF)</span>
+            <select id="book-lang-select"></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Ouvir em</span>
+            <select id="audio-lang-select"></select>
+          </label>
+        </div>
+        <div id="translation-note" class="note note-accent" hidden></div>
+        <label class="field">
+          <span class="field-label">Voz <span id="voice-count" class="muted"></span></span>
+          <select id="voice-select"></select>
+        </label>
+        <div class="field-row three">
+          <label class="field">
+            <span class="field-label">Velocidade <output id="rate-out"></output></span>
+            <input id="rate-range" type="range" min="0.5" max="3" step="0.05">
+          </label>
+          <label class="field">
+            <span class="field-label">Tom <output id="pitch-out"></output></span>
+            <input id="pitch-range" type="range" min="-50" max="50" step="5">
+          </label>
+          <label class="field">
+            <span class="field-label">Volume <output id="volume-out"></output></span>
+            <input id="volume-range" type="range" min="0" max="1" step="0.05">
+          </label>
+        </div>
+        <label class="check"><input type="checkbox" id="word-highlight-check"> Destacar também a palavra que está sendo falada</label>
+        <div class="popover-foot">
+          <button id="btn-test-voice" class="btn btn-soft"><span data-icon="volume"></span>Testar voz</button>
+          <span id="voice-error" class="error-text"></span>
+        </div>
+      </div>
+
+      <!-- Menu do timer de sono -->
+      <div id="timer-menu" class="popover menu" hidden>
+        <div class="menu-title">Parar a narração após…</div>
+        <button data-timer="0">Desligado</button>
+        <button data-timer="5">5 minutos</button>
+        <button data-timer="10">10 minutos</button>
+        <button data-timer="15">15 minutos</button>
+        <button data-timer="30">30 minutos</button>
+        <button data-timer="45">45 minutos</button>
+        <button data-timer="60">1 hora</button>
+        <button data-timer="page">Fim da página</button>
+        <button data-timer="chapter">Fim do capítulo</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="drop-overlay" class="drop-overlay" hidden>
+    <div class="drop-box"><span data-icon="upload"></span><div>Solte os arquivos PDF para adicionar à biblioteca</div></div>
+  </div>
+  <div id="context-menu" class="popover menu context-menu" hidden></div>
+  <div id="toasts" class="toasts"></div>
+  <div id="modal-root"></div>
+</body>
+</html>
